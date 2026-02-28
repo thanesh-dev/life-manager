@@ -10,6 +10,15 @@ export class CreateFoodLogDto {
     kcal: number;
 
     @IsOptional()
+    @IsString()
+    serving_unit?: string;
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    serving_size?: number;
+
+    @IsOptional()
     @IsEnum(['breakfast', 'lunch', 'dinner', 'snack'])
     meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
 

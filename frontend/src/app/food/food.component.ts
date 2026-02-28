@@ -116,6 +116,22 @@ interface FoodItem { name: string; kcal: number; portion: string; }
               <label class="form-label">kcal</label>
               <input id="food-kcal-input" class="form-input" type="number" [(ngModel)]="form.kcal" placeholder="0" min="0" />
             </div>
+          </div>
+          <div class="form-row" style="margin-top:0.75rem;">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Amount</label>
+              <input id="food-amount-input" class="form-input" type="number" [(ngModel)]="form.serving_size" placeholder="1.0" min="0" />
+            </div>
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Unit</label>
+              <select id="food-unit-select" class="form-select" [(ngModel)]="form.serving_unit">
+                <option value="quantity">Quantity</option>
+                <option value="g">Grams (g)</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="katori">Katori</option>
+                <option value="bowl">Bowl</option>
+              </select>
+            </div>
             <div class="form-group" style="flex:1">
               <label class="form-label">Meal</label>
               <select id="meal-type-select" class="form-select" [(ngModel)]="form.meal_type">
@@ -128,7 +144,7 @@ interface FoodItem { name: string; kcal: number; portion: string; }
           </div>
           <div *ngIf="logErr" class="alert alert-error">{{ logErr }}</div>
           <div *ngIf="logOk" class="alert alert-success">{{ logOk }}</div>
-          <button id="log-food-btn" class="btn btn-primary" (click)="logFood()" [disabled]="logging">
+          <button id="log-food-btn" class="btn btn-primary" (click)="logFood()" [disabled]="logging" style="margin-top:1rem;">
             <span *ngIf="logging" class="spinner"></span>
             <span *ngIf="!logging">Log Food</span>
           </button>
@@ -151,7 +167,10 @@ interface FoodItem { name: string; kcal: number; portion: string; }
               <div class="log-item" *ngFor="let log of group.items">
                 <div class="log-item-left">
                   <span class="log-item-title">{{ log.food_name }}</span>
-                  <span class="log-item-meta" *ngIf="log.image_analyzed">📸 AI scanned</span>
+                  <span class="log-item-meta">
+                    {{ log.serving_size }} {{ log.serving_unit === 'quantity' ? 'qty' : log.serving_unit }}
+                    <span *ngIf="log.image_analyzed"> · 📸 AI scanned</span>
+                  </span>
                 </div>
                 <div class="log-item-right" style="display:flex; align-items:center; gap:0.5rem;">
                   <span style="font-weight:700; color: var(--warning);">{{ log.kcal }} kcal</span>
@@ -207,7 +226,13 @@ interface FoodItem { name: string; kcal: number; portion: string; }
   `],
 })
 export class FoodComponent implements OnInit {
-  form = { food_name: '', kcal: null as number | null, meal_type: 'snack' as 'breakfast' | 'lunch' | 'dinner' | 'snack' };
+  form = {
+    food_name: '',
+    kcal: null as number | null,
+    serving_unit: 'quantity',
+    serving_size: 1.0,
+    meal_type: 'snack' as 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  };
   todayLogs: any[] = [];
   todayKcal = 0;
   dailyTarget = 2000;
@@ -264,8 +289,25 @@ export class FoodComponent implements OnInit {
     this.logErr = ''; this.logOk = '';
     if (!this.form.food_name || !this.form.kcal) { this.logErr = 'Food name and kcal are required.'; return; }
     this.logging = true;
-    this.api.logFood({ food_name: this.form.food_name, kcal: this.form.kcal!, meal_type: this.form.meal_type }).subscribe({
-      next: () => { this.logOk = '✅ Food logged!'; this.form = { food_name: '', kcal: null, meal_type: 'snack' }; this.logging = false; this.load(); },
+    this.api.logFood({
+      food_name: this.form.food_name,
+      kcal: this.form.kcal!,
+      serving_unit: this.form.serving_unit,
+      serving_size: this.form.serving_size,
+      meal_type: this.form.meal_type
+    }).subscribe({
+      next: () => {
+        this.logOk = '✅ Food logged!';
+        this.form = {
+          food_name: '',
+          kcal: null,
+          serving_unit: 'quantity',
+          serving_size: 1.0,
+          meal_type: 'snack'
+        };
+        this.logging = false;
+        this.load();
+      },
       error: (e) => { this.logErr = e?.error?.message || 'Failed'; this.logging = false; },
     });
   }

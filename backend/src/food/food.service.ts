@@ -8,9 +8,9 @@ export class FoodService {
 
     async logFood(userId: number, dto: CreateFoodLogDto) {
         const [result]: any = await this.pool.query(
-            `INSERT INTO food_logs (user_id, food_name, kcal, meal_type, image_analyzed)
-             VALUES (?, ?, ?, ?, ?)`,
-            [userId, dto.food_name, dto.kcal, dto.meal_type ?? 'snack', dto.image_analyzed ?? false],
+            `INSERT INTO food_logs (user_id, food_name, kcal, serving_unit, serving_size, meal_type, image_analyzed)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [userId, dto.food_name, dto.kcal, dto.serving_unit ?? 'quantity', dto.serving_size ?? 1.0, dto.meal_type ?? 'snack', dto.image_analyzed ?? false],
         );
         const [rows]: any = await this.pool.query('SELECT * FROM food_logs WHERE id = ?', [result.insertId]);
         return rows[0];

@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS food_logs (
   user_id INT,
   food_name VARCHAR(200) NOT NULL,
   kcal INT NOT NULL,
+  serving_unit VARCHAR(50) DEFAULT 'quantity', -- g, kg, katori, bowl, quantity
+  serving_size DECIMAL(10,2) DEFAULT 1.0,
   meal_type ENUM('breakfast','lunch','dinner','snack') DEFAULT 'snack',
   image_analyzed BOOLEAN DEFAULT FALSE,
   logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

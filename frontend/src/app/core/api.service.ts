@@ -84,7 +84,7 @@ export class ApiService {
     }
 
     // ── Food ─────────────────────────────────────────
-    logFood(data: { food_name: string; kcal: number; meal_type?: string; image_analyzed?: boolean }): Observable<any> {
+    logFood(data: { food_name: string; kcal: number; serving_unit?: string; serving_size?: number; meal_type?: string; image_analyzed?: boolean }): Observable<any> {
         return this.http.post(`${this.base}/food/log`, data, { headers: this.headers() });
     }
 
