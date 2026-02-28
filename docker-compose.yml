@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: life-manager-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-qwerty}
+      MYSQL_DATABASE: ${DATABASE_NAME:-lifemanager}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: life-manager-ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-setup:
+    image: alpine:latest
+    container_name: life-manager-ollama-setup
+    depends_on:
+      - ollama
+    entrypoint: /bin/sh -c
+    command: >
+      "apk add --no-cache curl && echo 'Waiting for Ollama...' && until curl -s http://ollama:11434/api/tags > /dev/null; do sleep 5; done && echo 'Pulling llama3...' && curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llama3\"}' && echo 'Pulling llava...' && curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llava\"}' && echo 'All models pulled!'"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: life-manager-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - ollama
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+      DATABASE_USER: root
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-qwerty}
+      DATABASE_NAME: ${DATABASE_NAME:-lifemanager}
+      JWT_SECRET: ${JWT_SECRET:-change_this_to_a_long_random_string}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: llama3
+      OLLAMA_VISION_MODEL: llava
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: life-manager-frontend
+    restart: always
+    ports:
+      - "4299:4299"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  ollama_data:
