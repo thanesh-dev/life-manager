@@ -8,6 +8,7 @@ import { FinanceModule } from './finance/finance.module';
 import { LearningModule } from './learning/learning.module';
 import { AiModule } from './ai/ai.module';
 import { FoodModule } from './food/food.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { FoodModule } from './food/food.module';
         LearningModule,
         AiModule,
         FoodModule,
+        ProfileModule,
     ],
 })
 export class AppModule { }

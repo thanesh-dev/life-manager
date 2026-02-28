@@ -87,6 +87,14 @@ export class ApiService {
         return this.http.post<any>(`${this.base}/ai/estimate-food-kcal`, { food_name, serving_size, serving_unit }, { headers: this.headers() });
     }
 
+    getProfile(): Observable<any> {
+        return this.http.get<any>(`${this.base}/profile`, { headers: this.headers() });
+    }
+
+    updateProfile(data: any): Observable<any> {
+        return this.http.post<any>(`${this.base}/profile`, data, { headers: this.headers() });
+    }
+
     // ── Food ─────────────────────────────────────────
     logFood(data: { food_name: string; kcal: number; serving_unit?: string; serving_size?: number; meal_type?: string; image_analyzed?: boolean }): Observable<any> {
         return this.http.post(`${this.base}/food/log`, data, { headers: this.headers() });

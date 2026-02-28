@@ -41,4 +41,22 @@ export class FinanceService {
         const totalSaved = logs.reduce((s: number, r: any) => s + (isNaN(r.amount) ? 0 : r.amount), 0);
         return { logs, totalSaved };
     }
+
+    async getLast30DaysLogs(userId: number) {
+        const [rows]: any = await this.pool.query(
+            `SELECT * FROM finance_logs
+             WHERE user_id = ? AND logged_at >= NOW() - INTERVAL 30 DAY
+             ORDER BY logged_at DESC`,
+            [userId],
+        );
+        return rows.map((row: any) => ({
+            id: row.id,
+            category: row.category,
+            amount: parseFloat(this.enc.safeDecrypt(row.amount_enc)),
+            title: row.category, // For AI logic consistency
+            type: row.category === 'Income' ? 'income' : 'expense', // Simplified
+            note: row.note_enc ? this.enc.safeDecrypt(row.note_enc) : null,
+            logged_at: row.logged_at,
+        }));
+    }
 }

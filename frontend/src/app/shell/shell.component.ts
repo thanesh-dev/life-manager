@@ -34,6 +34,9 @@ import { Router, RouterOutlet } from '@angular/router';
           <button id="nav-food" class="nav-item" [class.active]="active === 'food'" (click)="go('food')">
             <span class="nav-icon">🍽</span><span class="nav-label">Food & Calories</span>
           </button>
+          <button id="nav-profile" class="nav-item" [class.active]="active === 'profile'" (click)="go('profile')">
+            <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+          </button>
         </nav>
 
         <div class="sidebar-footer">
@@ -53,6 +56,7 @@ import { Router, RouterOutlet } from '@angular/router';
         <button class="mob-item" [class.active]="active === 'goals'" (click)="go('goals')">🎯</button>
         <button class="mob-item" [class.active]="active === 'insights'" (click)="go('insights')">🤖</button>
         <button class="mob-item" [class.active]="active === 'food'" (click)="go('food')">🍽</button>
+        <button class="mob-item" [class.active]="active === 'profile'" (click)="go('profile')">⚙️</button>
       </nav>
 
       <!-- Main Content -->

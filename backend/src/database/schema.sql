@@ -80,6 +80,17 @@ CREATE TABLE IF NOT EXISTS food_targets (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id INT PRIMARY KEY,
+  age INT,
+  height DECIMAL(5,2), -- in cm
+  weight DECIMAL(5,2), -- in kg
+  profession VARCHAR(100),
+  goal_description TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Upgrade existing fitness_logs if already created (comment out if fresh install)
 -- ALTER TABLE fitness_logs ADD COLUMN IF NOT EXISTS activity_type ENUM('cardio','gym','other') DEFAULT 'other';
 -- ALTER TABLE fitness_logs ADD COLUMN IF NOT EXISTS steps INT;

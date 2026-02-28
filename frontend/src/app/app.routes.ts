@@ -8,6 +8,7 @@ import { LearningComponent } from './learning/learning.component';
 import { GoalsComponent } from './goals/goals.component';
 import { InsightsComponent } from './insights/insights.component';
 import { FoodComponent } from './food/food.component';
+import { ProfileComponent } from './profile/profile.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -23,6 +24,7 @@ export const routes: Routes = [
             { path: 'goals', component: GoalsComponent },
             { path: 'insights', component: InsightsComponent },
             { path: 'food', component: FoodComponent },
+            { path: 'profile', component: ProfileComponent },
         ],
     },
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },

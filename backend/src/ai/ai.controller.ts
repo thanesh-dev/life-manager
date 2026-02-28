@@ -30,11 +30,11 @@ export class AiController {
     }
 
     @Post('estimate-calories')
-    async estimateCalories(@Body() dto: EstimateCaloriesDto) {
+    async estimateCalories(@Request() req, @Body() dto: EstimateCaloriesDto) {
         if (!dto.activity || !dto.duration) {
             throw new HttpException('activity and duration are required', HttpStatus.BAD_REQUEST);
         }
-        return this.aiService.estimateCalories(dto.activity, dto.duration, dto.weight);
+        return this.aiService.estimateCalories(dto.activity, dto.duration, req.user.userId);
     }
 
     @Post('finance-goal-plan')
@@ -55,10 +55,10 @@ export class AiController {
     }
 
     @Post('estimate-food-kcal')
-    async estimateFoodKcal(@Body() dto: EstimateFoodKcalDto) {
+    async estimateFoodKcal(@Request() req, @Body() dto: EstimateFoodKcalDto) {
         if (!dto.food_name || dto.serving_size === undefined || !dto.serving_unit) {
             throw new HttpException('food_name, serving_size, and serving_unit are required', HttpStatus.BAD_REQUEST);
         }
-        return this.aiService.estimateFoodKcal(dto.food_name, dto.serving_size, dto.serving_unit);
+        return this.aiService.estimateFoodKcal(dto.food_name, dto.serving_size, dto.serving_unit, req.user.userId);
     }
 }

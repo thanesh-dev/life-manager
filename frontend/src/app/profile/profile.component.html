@@ -1,0 +1,49 @@
+<div class="profile-container glass animate-in">
+    <div class="header">
+        <h1>👤 Personal Profile</h1>
+        <p class="subtitle">Personalize your AI assistant and track your biometrics.</p>
+    </div>
+
+    <div *ngIf="loading" class="loading">Loading your profile...</div>
+
+    <div *ngIf="!loading" class="form-grid">
+        <div class="input-group">
+            <label>Age</label>
+            <input type="number" [(ngModel)]="profile.age" placeholder="e.g. 25">
+        </div>
+
+        <div class="input-group">
+            <label>Height (cm)</label>
+            <input type="number" [(ngModel)]="profile.height" placeholder="e.g. 175">
+        </div>
+
+        <div class="input-group">
+            <label>Weight (kg)</label>
+            <input type="number" [(ngModel)]="profile.weight" placeholder="e.g. 70">
+        </div>
+
+        <div class="input-group">
+            <label>Profession</label>
+            <input type="text" [(ngModel)]="profile.profession" placeholder="e.g. Software Engineer">
+        </div>
+
+        <div class="input-group full-width">
+            <label>Life Goals / Description</label>
+            <textarea [(ngModel)]="profile.goal_description"
+                placeholder="What are you currently focusing on? (e.g. Weight loss, learning AI, saving for a car)"></textarea>
+        </div>
+
+        <div class="actions full-width">
+            <button class="btn btn-primary" (click)="save()" [disabled]="saving">
+                {{ saving ? 'Saving...' : 'Save Settings' }}
+            </button>
+            <p *ngIf="message" class="success-msg">{{ message }}</p>
+            <p *ngIf="error" class="error-msg">{{ error }}</p>
+        </div>
+    </div>
+
+    <div class="ai-note glass">
+        <p>🤖 <strong>AI Personalization:</strong> Your age, height, and weight are used by the AI to provide more
+            accurate calorie estimates and wellness advice.</p>
+    </div>
+</div>
