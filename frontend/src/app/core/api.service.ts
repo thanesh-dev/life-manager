@@ -83,6 +83,10 @@ export class ApiService {
         return this.http.post<any>(`${this.base}/ai/analyze-food-image`, { image }, { headers: this.headers() });
     }
 
+    estimateFoodKcal(food_name: string, serving_size: number, serving_unit: string): Observable<{ kcal: number; explanation: string }> {
+        return this.http.post<any>(`${this.base}/ai/estimate-food-kcal`, { food_name, serving_size, serving_unit }, { headers: this.headers() });
+    }
+
     // ── Food ─────────────────────────────────────────
     logFood(data: { food_name: string; kcal: number; serving_unit?: string; serving_size?: number; meal_type?: string; image_analyzed?: boolean }): Observable<any> {
         return this.http.post(`${this.base}/food/log`, data, { headers: this.headers() });

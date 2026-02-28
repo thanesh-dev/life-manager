@@ -207,4 +207,29 @@ Respond ONLY with a valid JSON object, no markdown, no extra text:
             throw new Error(`Food image analysis failed: ${msg}. Make sure llava is installed: ollama pull llava`);
         }
     }
+
+    // ─── 5. AI Food Kcal Estimator ───────────────────────────────────────────
+    async estimateFoodKcal(foodName: string, quantity: number, unit: string): Promise<{ kcal: number; explanation: string }> {
+        const prompt = `You are a nutrition expert. Estimate the calories (kcal) for the following food item.
+Food: ${foodName}
+Quantity: ${quantity}
+Unit: ${unit}
+
+Respond ONLY with a valid JSON object in this exact format (no markdown, no extra text):
+{"kcal": <integer>, "explanation": "<one sentence explanation>"}
+Be as accurate as possible for the given portion.`;
+
+        try {
+            const raw = await this.callOllama(prompt);
+            const jsonMatch = raw.match(/\{[\s\S]*"kcal"[\s\S]*"explanation"[\s\S]*\}/);
+            if (!jsonMatch) throw new Error('Could not parse AI response');
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+                kcal: Math.max(0, Math.round(Number(parsed.kcal))),
+                explanation: String(parsed.explanation),
+            };
+        } catch (err: any) {
+            throw new Error(`AI Kcal estimation failed: ${err.message}`);
+        }
+    }
 }

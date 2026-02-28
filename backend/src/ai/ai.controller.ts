@@ -13,6 +13,12 @@ class AnalyzeFoodImageDto {
     @IsString() image: string;  // base64 data-URL
 }
 
+class EstimateFoodKcalDto {
+    @IsString() food_name: string;
+    @IsNumber() @Min(0) serving_size: number;
+    @IsString() serving_unit: string;
+}
+
 @UseGuards(JwtAuthGuard)
 @Controller('ai')
 export class AiController {
@@ -46,5 +52,13 @@ export class AiController {
         } catch (err: any) {
             throw new HttpException(err.message, HttpStatus.SERVICE_UNAVAILABLE);
         }
+    }
+
+    @Post('estimate-food-kcal')
+    async estimateFoodKcal(@Body() dto: EstimateFoodKcalDto) {
+        if (!dto.food_name || dto.serving_size === undefined || !dto.serving_unit) {
+            throw new HttpException('food_name, serving_size, and serving_unit are required', HttpStatus.BAD_REQUEST);
+        }
+        return this.aiService.estimateFoodKcal(dto.food_name, dto.serving_size, dto.serving_unit);
     }
 }

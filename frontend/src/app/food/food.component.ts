@@ -114,7 +114,13 @@ interface FoodItem { name: string; kcal: number; portion: string; }
             </div>
             <div class="form-group" style="flex:1">
               <label class="form-label">kcal</label>
-              <input id="food-kcal-input" class="form-input" type="number" [(ngModel)]="form.kcal" placeholder="0" min="0" />
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <input id="food-kcal-input" class="form-input" type="number" [(ngModel)]="form.kcal" placeholder="0" min="0" />
+                <button class="btn ai-estimate-btn" style="padding:0.45rem 0.75rem; border-radius: var(--radius-sm);" (click)="estimateKcal()" [disabled]="estimatingKcal || !form.food_name">
+                  <span *ngIf="estimatingKcal" class="spinner"></span>
+                  <span *ngIf="!estimatingKcal">🤖</span>
+                </button>
+              </div>
             </div>
           </div>
           <div class="form-row" style="margin-top:0.75rem;">
@@ -240,6 +246,7 @@ export class FoodComponent implements OnInit {
   loadingToday = true;
   logging = false;
   settingTarget = false;
+  estimatingKcal = false;
   logErr = ''; logOk = '';
 
   // Camera / AI
@@ -282,6 +289,23 @@ export class FoodComponent implements OnInit {
     this.api.setFoodTarget(this.newTarget).subscribe({
       next: (r) => { this.dailyTarget = r.daily_kcal_target; this.settingTarget = false; },
       error: () => { this.settingTarget = false; },
+    });
+  }
+
+  estimateKcal() {
+    if (!this.form.food_name || this.form.serving_size === undefined || !this.form.serving_unit) return;
+    this.estimatingKcal = true;
+    this.logErr = ''; this.logOk = '';
+    this.api.estimateFoodKcal(this.form.food_name, this.form.serving_size, this.form.serving_unit).subscribe({
+      next: (res) => {
+        this.form.kcal = res.kcal;
+        this.logOk = `🤖 AI Estimate: ${res.explanation}`;
+        this.estimatingKcal = false;
+      },
+      error: (e) => {
+        this.logErr = e?.error?.message || 'AI Kcal estimation unavailable';
+        this.estimatingKcal = false;
+      },
     });
   }
 
