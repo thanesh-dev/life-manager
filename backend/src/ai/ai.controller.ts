@@ -61,4 +61,9 @@ export class AiController {
         }
         return this.aiService.estimateFoodKcal(dto.food_name, dto.serving_size, dto.serving_unit, req.user.userId);
     }
+
+    @Post('suggest-food-target')
+    async suggestFoodTarget(@Request() req) {
+        return this.aiService.suggestDailyTarget(req.user.userId);
+    }
 }

@@ -207,4 +207,44 @@ Be as accurate as possible for the given portion.`;
             throw new Error(`AI Kcal estimation failed: ${err.message}`);
         }
     }
+
+    // ─── 6. Suggest Daily Kcal Target ─────────────────────────────────────
+    async suggestDailyTarget(userId: number): Promise<{ recommendedKcal: number; explanation: string }> {
+        const profile = await this.profileService.getProfile(userId);
+        if (!profile || !profile.weight || !profile.height || !profile.age) {
+            throw new Error('Weight, height, and age are required for a personalized suggestion. Please update your profile.');
+        }
+
+        const prompt = `You are a nutrition and fitness expert. Calculate the daily maintenance calories (TDEE) and suggest a target for this user.
+User Details:
+- Age: ${profile.age}
+- Height: ${profile.height} cm
+- Weight: ${profile.weight} kg
+- Profession/Activity: ${profile.profession || 'Not specified'}
+- Goals: ${profile.goal_description || 'General health'}
+
+Calculate using the Harris-Benedict equation (or similar). If they want to lose weight, suggest a deficit.
+Respond ONLY with a valid JSON object:
+{"recommendedKcal": <integer>, "explanation": "<one sentence explanation based on the biometrics>"}
+`;
+
+        try {
+            const raw = await this.callOllama(prompt);
+            const jsonMatch = raw.match(/\{.*"recommendedKcal".*"explanation".*\}/s);
+            if (!jsonMatch) throw new Error('Invalid JSON from AI');
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+                recommendedKcal: Math.max(500, Math.min(10000, Math.round(Number(parsed.recommendedKcal)))),
+                explanation: String(parsed.explanation)
+            };
+        } catch (err: any) {
+            // Fallback: Simple Mifflin-St Jeor
+            const bmr = (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) + 5;
+            const tdee = Math.round(bmr * 1.2);
+            return {
+                recommendedKcal: tdee,
+                explanation: `Estimated ${tdee} kcal based on standard BMR formula for your biometrics (fallback).`
+            };
+        }
+    }
 }

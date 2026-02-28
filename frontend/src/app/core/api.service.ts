@@ -116,6 +116,10 @@ export class ApiService {
         return this.http.post<any>(`${this.base}/food/target`, { daily_kcal_target }, { headers: this.headers() });
     }
 
+    suggestFoodTarget(): Observable<{ recommendedKcal: number; explanation: string }> {
+        return this.http.post<any>(`${this.base}/ai/suggest-food-target`, {}, { headers: this.headers() });
+    }
+
     getFoodTarget(): Observable<{ daily_kcal_target: number }> {
         return this.http.get<any>(`${this.base}/food/target`, { headers: this.headers() });
     }

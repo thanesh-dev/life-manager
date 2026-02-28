@@ -9,227 +9,8 @@ interface FoodItem { name: string; kcal: number; portion: string; }
   selector: 'app-food',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="page">
-      <div class="page-inner fade-up">
-
-        <!-- Header -->
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">🍽 Food & Calories</h2>
-            <p class="section-sub">Track meals · Set daily target · Snap to count kcal with AI</p>
-          </div>
-          <span class="tag tag-fitness">Today</span>
-        </div>
-
-        <!-- ── Daily Target + Progress ────────────────────────── -->
-        <div class="card target-card" style="margin-bottom: 1.5rem;">
-          <div class="target-row">
-            <div>
-              <div class="stat-value">{{ todayKcal }}</div>
-              <div class="stat-label">kcal consumed today</div>
-            </div>
-            <div style="text-align:right;">
-              <div class="stat-value" style="font-size:1.3rem;">{{ dailyTarget }}</div>
-              <div class="stat-label">daily target</div>
-            </div>
-          </div>
-          <!-- Progress bar -->
-          <div class="progress-track">
-            <div class="progress-bar" [style.width.%]="progressPct" [class.over]="progressPct >= 100"></div>
-          </div>
-          <div class="progress-label">
-            <span [style.color]="progressPct >= 100 ? 'var(--danger)' : 'var(--success)'">
-              {{ progressPct >= 100 ? '⚠️ Over target by ' + (todayKcal - dailyTarget) + ' kcal' : remaining + ' kcal remaining' }}
-            </span>
-          </div>
-
-          <!-- Set target inline -->
-          <div class="target-edit-row">
-            <input class="form-input" style="width:120px; font-size:0.85rem; padding:0.45rem 0.7rem;" type="number" [(ngModel)]="newTarget" placeholder="e.g. 2000" min="500" max="10000" />
-            <button class="btn btn-secondary" style="font-size:0.82rem;padding:0.45rem 0.9rem;" (click)="setTarget()" [disabled]="settingTarget">
-              {{ settingTarget ? '...' : 'Set Target' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- ── Camera / AI Food Analyser ─────────────────────── -->
-        <div class="card camera-card" style="margin-bottom: 1.5rem;">
-          <div class="camera-header">
-            <div>
-              <h3 style="font-size:0.95rem; font-weight:700;">📸 AI Calorie Scanner</h3>
-              <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.2rem;">
-                Take or upload a food photo → AI identifies items & estimates kcal
-              </p>
-            </div>
-          </div>
-
-          <!-- Hidden file input (triggers camera on mobile, file picker on desktop) -->
-          <input #fileInput type="file" accept="image/*" capture="environment" style="display:none" (change)="onImageSelected($event)" id="camera-input" />
-
-          <div class="camera-actions">
-            <button id="take-photo-btn" class="btn camera-btn" (click)="fileInput.click()">
-              📲 Take / Upload Photo
-            </button>
-            <button id="analyze-btn" class="btn btn-primary" (click)="analyzeImage()" [disabled]="!capturedImage || analyzing">
-              <span *ngIf="analyzing" class="spinner"></span>
-              <span *ngIf="!analyzing">🤖 Analyse with AI</span>
-            </button>
-          </div>
-
-          <!-- Preview -->
-          <div *ngIf="capturedImage" class="image-preview">
-            <img [src]="capturedImage" alt="Food preview" class="preview-img" />
-          </div>
-
-          <!-- AI Result -->
-          <div *ngIf="analyzeResult" class="analyze-result fade-up">
-            <div class="divider"></div>
-            <div class="result-header">
-              <strong>🤖 AI detected {{ analyzeResult.foods.length }} item(s) — {{ analyzeResult.totalKcal }} kcal total</strong>
-            </div>
-            <p *ngIf="analyzeResult.details" style="font-size:0.82rem; color:var(--text-secondary); margin:0.4rem 0 0.8rem;">{{ analyzeResult.details }}</p>
-            <div class="food-chips">
-              <div class="food-chip" *ngFor="let f of analyzeResult.foods">
-                <span class="food-chip-name">{{ f.name }}</span>
-                <span class="food-chip-portion">{{ f.portion }}</span>
-                <span class="food-chip-kcal">{{ f.kcal }} kcal</span>
-              </div>
-            </div>
-            <button id="add-ai-foods-btn" class="btn btn-primary" style="margin-top:0.75rem; width:100%; justify-content:center;" (click)="addAiFoodsToLog()">
-              ➕ Add All to Today's Log
-            </button>
-          </div>
-
-          <div *ngIf="analyzeErr" class="alert alert-error" style="margin-top:0.75rem;">{{ analyzeErr }}</div>
-        </div>
-
-        <!-- ── Manual Log Form ────────────────────────────────── -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:1rem;">➕ Log Food Manually</h3>
-          <div class="form-row">
-            <div class="form-group" style="flex:2">
-              <label class="form-label">Food Item</label>
-              <input id="food-name-input" class="form-input" type="text" [(ngModel)]="form.food_name" placeholder="e.g. Idli, Chicken rice, Apple..." />
-            </div>
-            <div class="form-group" style="flex:1">
-              <label class="form-label">kcal</label>
-              <div style="display:flex; gap:0.5rem; align-items:center;">
-                <input id="food-kcal-input" class="form-input" type="number" [(ngModel)]="form.kcal" placeholder="0" min="0" />
-                <button class="btn ai-estimate-btn" style="padding:0.45rem 0.75rem; border-radius: var(--radius-sm);" (click)="estimateKcal()" [disabled]="estimatingKcal || !form.food_name">
-                  <span *ngIf="estimatingKcal" class="spinner"></span>
-                  <span *ngIf="!estimatingKcal">🤖</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="form-row" style="margin-top:0.75rem;">
-            <div class="form-group" style="flex:1">
-              <label class="form-label">Amount</label>
-              <input id="food-amount-input" class="form-input" type="number" [(ngModel)]="form.serving_size" placeholder="1.0" min="0" />
-            </div>
-            <div class="form-group" style="flex:1">
-              <label class="form-label">Unit</label>
-              <select id="food-unit-select" class="form-select" [(ngModel)]="form.serving_unit">
-                <option value="quantity">Quantity</option>
-                <option value="g">Grams (g)</option>
-                <option value="kg">Kilograms (kg)</option>
-                <option value="katori">Katori</option>
-                <option value="bowl">Bowl</option>
-              </select>
-            </div>
-            <div class="form-group" style="flex:1">
-              <label class="form-label">Meal</label>
-              <select id="meal-type-select" class="form-select" [(ngModel)]="form.meal_type">
-                <option value="breakfast">🌅 Breakfast</option>
-                <option value="lunch">☀️ Lunch</option>
-                <option value="dinner">🌙 Dinner</option>
-                <option value="snack">🍎 Snack</option>
-              </select>
-            </div>
-          </div>
-          <div *ngIf="logErr" class="alert alert-error">{{ logErr }}</div>
-          <div *ngIf="logOk" class="alert alert-success">{{ logOk }}</div>
-          <button id="log-food-btn" class="btn btn-primary" (click)="logFood()" [disabled]="logging" style="margin-top:1rem;">
-            <span *ngIf="logging" class="spinner"></span>
-            <span *ngIf="!logging">Log Food</span>
-          </button>
-        </div>
-
-        <!-- ── Today's Logs ────────────────────────────────────── -->
-        <div class="section-header">
-          <h3 class="section-title" style="font-size:1rem;">Today's Meals</h3>
-          <span style="font-size:0.82rem; color:var(--text-secondary);">{{ todayLogs.length }} entries</span>
-        </div>
-        <div *ngIf="loadingToday" style="text-align:center;padding:2rem;"><span class="spinner"></span></div>
-        <div *ngIf="!loadingToday && todayLogs.length === 0" class="empty-state">
-          <div class="icon">🥗</div>
-          <p>No meals logged today. Start tracking!</p>
-        </div>
-        <div class="meal-groups" *ngIf="!loadingToday && todayLogs.length > 0">
-          <div *ngFor="let group of mealGroups">
-            <div class="meal-group-label">{{ mealLabel(group.type) }}</div>
-            <div class="log-list" style="margin-bottom:0.5rem;">
-              <div class="log-item" *ngFor="let log of group.items">
-                <div class="log-item-left">
-                  <span class="log-item-title">{{ log.food_name }}</span>
-                  <span class="log-item-meta">
-                    {{ log.serving_size }} {{ log.serving_unit === 'quantity' ? 'qty' : log.serving_unit }}
-                    <span *ngIf="log.image_analyzed"> · 📸 AI scanned</span>
-                  </span>
-                </div>
-                <div class="log-item-right" style="display:flex; align-items:center; gap:0.5rem;">
-                  <span style="font-weight:700; color: var(--warning);">{{ log.kcal }} kcal</span>
-                  <button class="btn btn-danger" style="padding:0.25rem 0.5rem; font-size:0.72rem;" (click)="deleteLog(log.id)">🗑</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-    /* Target card */
-    .target-card { background: linear-gradient(135deg, rgba(34,197,94,0.06), rgba(16,185,129,0.03)); border-color: rgba(34,197,94,0.2); }
-    .target-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
-    .stat-value { font-size: 2rem; font-weight: 800; background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stat-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
-
-    .progress-track { height: 8px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; margin-bottom: 0.4rem; }
-    .progress-bar { height: 100%; background: var(--accent-grad); border-radius: 99px; transition: width 0.5s ease; max-width: 100%; }
-    .progress-bar.over { background: linear-gradient(90deg, #ef4444, #f97316); }
-    .progress-label { font-size: 0.8rem; margin-bottom: 0.85rem; }
-    .target-edit-row { display: flex; gap: 0.5rem; align-items: center; }
-
-    /* Camera card */
-    .camera-card { background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(108,99,255,0.04)); border-color: rgba(56,189,248,0.2); }
-    .camera-header { margin-bottom: 0.85rem; }
-    .camera-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-    .camera-btn {
-      background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(108,99,255,0.1));
-      border: 1px solid rgba(56,189,248,0.3);
-      color: var(--info);
-      font-weight: 700;
-    }
-    .camera-btn:hover { background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(108,99,255,0.18)); }
-
-    .image-preview { margin-top: 0.75rem; border-radius: var(--radius-md); overflow: hidden; }
-    .preview-img { width: 100%; max-height: 260px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--glass-border); }
-
-    .result-header { font-size: 0.9rem; margin-bottom: 0.3rem; }
-    .food-chips { display: flex; flex-direction: column; gap: 0.4rem; }
-    .food-chip { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.75rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-size: 0.85rem; }
-    .food-chip-name { flex: 1; font-weight: 600; }
-    .food-chip-portion { color: var(--text-muted); font-size: 0.78rem; }
-    .food-chip-kcal { font-weight: 700; color: var(--warning); }
-
-    /* Meal groups */
-    .meal-group-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0.85rem 0 0.4rem; }
-    .log-item { margin-bottom: 0; }
-  `],
+  templateUrl: './food.component.html',
+  styleUrls: ['./food.component.css']
 })
 export class FoodComponent implements OnInit {
   form = {
@@ -247,6 +28,8 @@ export class FoodComponent implements OnInit {
   logging = false;
   settingTarget = false;
   estimatingKcal = false;
+  suggestingTarget = false;
+  suggestResult = '';
   logErr = ''; logOk = '';
 
   // Camera / AI
@@ -289,6 +72,22 @@ export class FoodComponent implements OnInit {
     this.api.setFoodTarget(this.newTarget).subscribe({
       next: (r) => { this.dailyTarget = r.daily_kcal_target; this.settingTarget = false; },
       error: () => { this.settingTarget = false; },
+    });
+  }
+
+  suggestTarget() {
+    this.suggestingTarget = true;
+    this.suggestResult = '';
+    this.api.suggestFoodTarget().subscribe({
+      next: (res) => {
+        this.newTarget = res.recommendedKcal;
+        this.suggestResult = res.explanation;
+        this.suggestingTarget = false;
+      },
+      error: (e) => {
+        this.logErr = e?.error?.message || 'Please update your weight/height in Profile first.';
+        this.suggestingTarget = false;
+      }
     });
   }
 
